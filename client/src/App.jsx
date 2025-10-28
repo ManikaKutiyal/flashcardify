@@ -19,9 +19,35 @@ const styles = {
   },
   card: { backgroundColor: '#524545ff', border: '1px solid #ddd', padding: '10px', marginBottom: '10px', position: 'relative' },
   deleteButton: { position: 'absolute', top: '5px', right: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'red', fontSize: '1.2rem' },
-  deleteDeckButton: { backgroundColor: '#ff4d4d', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' }
+  deleteDeckButton: { backgroundColor: '#ff4d4d', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' },
+  
+  // --- ADD ALL THESE MISSING STYLES ---
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  backButton: { backgroundColor: '#ddd' },
+  studyButton: { backgroundColor: '#4CAF50', color: 'white' },
+  studyCard: {
+    backgroundColor: '#f4f4f4',
+    border: '1px solid #ddd',
+    padding: '50px',
+    minHeight: '200px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    userSelect: 'none'
+  },
+  studyCardBack: {
+    backgroundColor: '#e0e0e0', // A slightly different color for the back
+  },
+  studyControls: {
+    display: 'flex',
+    justifyContent: 'space-around',
+    marginTop: '20px'
+  }
+  // --- END OF ADDED STYLES ---
 };
-
 function App() {
   const [decks, setDecks] = useState([]);  //1. State for data
   const [selectedDeck, setSelectedDeck] = useState(null); //1. State for data
