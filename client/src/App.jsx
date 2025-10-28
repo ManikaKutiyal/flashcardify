@@ -1,53 +1,7 @@
-// client/src/App.jsx
-
+// client/src/App.jsx 
 import React, { useState, useEffect } from 'react';
+import styles from './App.module.css';
 
-const styles = {
-  container: { fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px' },
-  form: { marginBottom: '20px', display: 'flex' },
-  input: { flexGrow: 1, padding: '8px', marginRight: '10px' },
-  button: { padding: '8px 15px' },
-  ul: { listStyle: 'none', padding: 0 },
-  li: {
-    backgroundColor: '#3d3939ff',
-    padding: '15px',
-    marginBottom: '10px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    cursor: 'pointer'
-  },
-  card: { backgroundColor: '#524545ff', border: '1px solid #ddd', padding: '10px', marginBottom: '10px', position: 'relative' },
-  deleteButton: { position: 'absolute', top: '5px', right: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'red', fontSize: '1.2rem' },
-  deleteDeckButton: { backgroundColor: '#ff4d4d', color: 'white', border: 'none', cursor: 'pointer', padding: '5px 10px' },
-  
-  // --- ADD ALL THESE MISSING STYLES ---
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  backButton: { backgroundColor: '#ddd' },
-  studyButton: { backgroundColor: '#4CAF50', color: 'white' },
-  studyCard: {
-    backgroundColor: '#f4f4f4',
-    border: '1px solid #ddd',
-    padding: '50px',
-    minHeight: '200px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    textAlign: 'center',
-    fontSize: '1.5rem',
-    cursor: 'pointer',
-    userSelect: 'none'
-  },
-  studyCardBack: {
-    backgroundColor: '#e0e0e0', // A slightly different color for the back
-  },
-  studyControls: {
-    display: 'flex',
-    justifyContent: 'space-around',
-    marginTop: '20px'
-  }
-  // --- END OF ADDED STYLES ---
-};
 function App() {
   const [decks, setDecks] = useState([]);  //1. State for data
   const [selectedDeck, setSelectedDeck] = useState(null); //1. State for data
@@ -62,7 +16,6 @@ function App() {
   const [isFlipped, setIsFlipped] = useState(false);
 
 
-
   useEffect(() => {
     async function fetchDecks() {
       const response = await fetch('http://localhost:5001/api/decks');
@@ -72,12 +25,26 @@ function App() {
     fetchDecks();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     if (selectedDeck) {
-      setCards(selectedDeck.cards);
+      // Shuffle cards only when a new deck is selected for study
+      if (view === 'study') {
+        setCards(shuffleArray([...selectedDeck.cards])); // Shuffle for study mode
+      } else {
+        setCards(selectedDeck.cards); // Original order for manager mode
+      }
     }
-  }, [selectedDeck]);
-// --- Handlers for Cards ---
+  }, [selectedDeck, view]); // Re-run if view changes, primarily for study mode trigger
+  // Helper function to shuffle array (Fisher-Yates)
+  const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+  
+  // --- Handlers for Cards ---
   const handleCreateCard = async (e) => {
     e.preventDefault();
     if (!selectedDeck || !newCard.front || !newCard.back) return;
@@ -133,17 +100,23 @@ function App() {
     setView('decks');
   };
   const handleStartStudy = () => {
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setView('study');
-  };
-
+    if (selectedDeck && selectedDeck.cards.length > 0) {
+      setCards(shuffleArray([...selectedDeck.cards])); // Shuffle for study mode
+      setCurrentCardIndex(0);
+      setIsFlipped(false);
+      setView('study');
+    }
+  }; 
   // --- Handlers for Study Mode ---
   const handleFlipCard = () => setIsFlipped(!isFlipped);
   const handleNextCard = () => {
-    if (currentCardIndex < selectedDeck.cards.length - 1) {
+    if (currentCardIndex < cards.length - 1) { // Use 'cards' state which is shuffled
       setCurrentCardIndex(currentCardIndex + 1);
       setIsFlipped(false);
+    } else {
+      // Optionally go back to cards view or show 'study complete' message
+      alert("You've completed this deck!");
+      setView('cards');
     }
   };
   const handlePrevCard = () => {
@@ -155,20 +128,20 @@ function App() {
 
 
   return (
-    <div style={styles.container}>
+    <div className={styles.container}>
       {/* VIEW 1: DECK LIST */}
       {view === 'decks' && (
         <div>
-          <div style={styles.header}><h1>Flashcardify Decks</h1></div>
-          <form onSubmit={handleCreateDeck} style={styles.form}>
-            <input style={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="New deck title"/>
-            <button type="submit" style={styles.button}>Create</button>
+          <div className={styles.header}><h1>Flashcardify Decks</h1></div>
+          <form onSubmit={handleCreateDeck} className={styles.form}>
+            <input className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="New deck title"/>
+            <button type="submit" className={styles.button}>Create</button>
           </form>
-          <ul style={styles.ul}>
+          <ul className={styles.ul}>
             {decks.map((deck) => (
-              <li key={deck._id} onClick={() => handleSelectDeck(deck)} style={styles.li}>
+              <li key={deck._id} onClick={() => handleSelectDeck(deck)} className={styles.li}>
                 {deck.title} ({deck.cards.length} cards)
-                <button onClick={(e) => handleDeleteDeck(e, deck._id)} style={{...styles.button, ...styles.deleteDeckButton}}>Delete</button>
+                <button onClick={(e) => handleDeleteDeck(e, deck._id)} className={`${styles.button} ${styles.deleteDeckButton}`}>Delete</button>
               </li>
             ))}
           </ul>
@@ -178,22 +151,22 @@ function App() {
       {/* VIEW 2: CARD MANAGER */}
       {view === 'cards' && selectedDeck && (
         <div>
-          <div style={styles.header}>
-            <button onClick={handleBackToDecks} style={{...styles.button, ...styles.backButton}}>← Back</button>
+          <div className={styles.header}>
+            <button onClick={handleBackToDecks} className={`${styles.button} ${styles.backButton}`}>← Back</button>
             <h2>{selectedDeck.title}</h2>
-            {selectedDeck.cards.length > 0 && <button onClick={handleStartStudy} style={{...styles.button, ...styles.studyButton}}>Study</button>}
+            {selectedDeck.cards.length > 0 && <button onClick={handleStartStudy} className={`${styles.button} ${styles.studyButton}`}>Study</button>}
           </div>
-          <form onSubmit={handleCreateCard} style={styles.form}>
-            <input style={styles.input} value={newCard.front} onChange={(e) => setNewCard({...newCard, front: e.target.value})} placeholder="Card Front (Question)"/>
-            <input style={styles.input} value={newCard.back} onChange={(e) => setNewCard({...newCard, back: e.target.value})} placeholder="Card Back (Answer)"/>
-            <button type="submit" style={styles.button}>Add Card</button>
+          <form onSubmit={handleCreateCard} className={styles.form}>
+            <input className={styles.input} value={newCard.front} onChange={(e) => setNewCard({...newCard, front: e.target.value})} placeholder="Card Front (Question)"/>
+            <input className={styles.input} value={newCard.back} onChange={(e) => setNewCard({...newCard, back: e.target.value})} placeholder="Card Back (Answer)"/>
+            <button type="submit" className={styles.button}>Add Card</button>
           </form>
-          <ul style={styles.ul}>
+          <ul className={styles.ul}>
             {selectedDeck.cards.map((card) => (
-              <li key={card._id} style={styles.card}>
+              <li key={card._id} className={styles.card}>
                 <p><strong>Front:</strong> {card.front}</p>
                 <p><strong>Back:</strong> {card.back}</p>
-                <button onClick={() => handleDeleteCard(card._id)} style={styles.deleteButton}>&times;</button>
+                <button onClick={() => handleDeleteCard(card._id)} className={styles.deleteButton}>&times;</button>
               </li>
             ))}
           </ul>
@@ -203,18 +176,18 @@ function App() {
       {/* VIEW 3: STUDY MODE */}
       {view === 'study' && selectedDeck && (
         <div>
-          <div style={styles.header}>
-            <button onClick={() => setView('cards')} style={{...styles.button, ...styles.backButton}}>← Back to Deck</button>
+          <div className={styles.header}>
+            <button onClick={() => setView('cards')} className={`${styles.button} ${styles.backButton}`}>← Back to Deck</button>
             <h2>Studying: {selectedDeck.title}</h2>
           </div>
           <p>Card {currentCardIndex + 1} of {selectedDeck.cards.length}</p>
-          <div onClick={handleFlipCard} style={{...styles.studyCard, ...(isFlipped ? styles.studyCardBack : {})}}>
+          <div onClick={handleFlipCard} className={`${styles.studyCard} ${isFlipped ? styles.studyCardBack : ''}`}>
             {isFlipped ? selectedDeck.cards[currentCardIndex].back : selectedDeck.cards[currentCardIndex].front}
           </div>
-          <div style={styles.studyControls}>
-            <button onClick={handlePrevCard} style={styles.button} disabled={currentCardIndex === 0}>Previous</button>
-            <button onClick={handleFlipCard} style={{...styles.button, ...styles.studyButton}}>Flip</button>
-            <button onClick={handleNextCard} style={styles.button} disabled={currentCardIndex === selectedDeck.cards.length - 1}>Next</button>
+          <div className={styles.studyControls}>
+            <button onClick={handlePrevCard} className={styles.button} disabled={currentCardIndex === 0}>Previous</button>
+            <button onClick={handleFlipCard} className={`${styles.button} ${styles.studyButton}`}>Flip</button>
+            <button onClick={handleNextCard} className={styles.button} disabled={currentCardIndex === selectedDeck.cards.length - 1}>Next</button>
           </div>
         </div>
       )}
